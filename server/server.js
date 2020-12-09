@@ -7,24 +7,30 @@ const passport = require('passport');
 const passportConfig = require('./services/auth');
 const MongoStore = require('connect-mongo')(session);
 const schema = require('./schema/schema');
-const keys = require('./config/keys');
+const keys = require('../config/keys');
 
 const app = express();
 
 mongoose.Promise = global.Promise;
 
-mongoose.connect(keys.mongoURI);
-mongoose.connection
-    .once('open', () => console.log('Connected to MongoLab instance.'))
-    .on('error', error => console.log('Error connecting to MongoLab:', error));
-
+mongoose.connect(keys.mongoURI, {
+  authSource: "admin",
+  retryWrites: true,
+  dbName: "graphql",
+  useCreateIndex: true,
+  useNewUrlParser: true
+});
+const db = mongoose.connection
+  .once('open', () => console.log('Connected to MongoLab instance.'))
+  .on('error', error => console.log('Error connecting to MongoLab:', error));
 
 app.use(session({
   resave: true,
   saveUninitialized: true,
   secret: 'aaabbbccc',
   store: new MongoStore({
-    url: MONGO_URI,
+    // url: MONGO_URI,
+    mongooseConnection: db,
     autoReconnect: true
   })
 }));
